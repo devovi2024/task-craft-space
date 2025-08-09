@@ -12,6 +12,8 @@ exports.createTask = async (req, res) => {
   }
 };
 
+
+
 exports.deleteTask = async (req, res) => {
   try {
     const result = await TasksModel.deleteOne({ _id: req.params.id });
@@ -23,6 +25,8 @@ exports.deleteTask = async (req, res) => {
     res.status(400).json({ status: "fail", error: err.message });
   }
 };
+
+
 
 exports.updateStatus = async (req, res) => {
   try {
@@ -45,6 +49,8 @@ exports.updateStatus = async (req, res) => {
   }
 };
 
+
+
 exports.listTaskByStatus = async (req, res) => {
   try {
     const status = req.params.status;
@@ -66,6 +72,33 @@ exports.listTaskByStatus = async (req, res) => {
     ]);
 
     res.status(200).json({ status: "success", data: tasks });
+  } catch (err) {
+    res.status(400).json({ status: "fail", error: err.message });
+  }
+};
+
+
+exports.tasksStatusByCount = async (req, res) => {
+  try {
+    const email = req.user.email;
+
+    const aggregationResult = await TasksModel.aggregate([
+      { $match: { email: email } },
+      {
+        $group: {
+          _id: "$status",
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    const totalTasks = aggregationResult.reduce((sum, item) => sum + item.count, 0);
+
+    res.status(200).json({
+      status: "success",
+      total: totalTasks,
+      byStatus: aggregationResult
+    });
   } catch (err) {
     res.status(400).json({ status: "fail", error: err.message });
   }
