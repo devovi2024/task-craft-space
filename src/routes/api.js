@@ -13,6 +13,7 @@ router.post("/profile-update", AuthMiddleware, UsersController.profileUpdate);
 // Task Routes
 router.post("/tasks", AuthMiddleware, TaskController.createTask);
 router.delete("/tasks/:id", AuthMiddleware, TaskController.deleteTask);
-router.patch("/tasks/:id/:status", AuthMiddleware, TaskController.updateStatus);
+router.patch("/tasks/:id/status", AuthMiddleware, TaskController.updateStatus);
+router.get("/tasks/status/:status", AuthMiddleware, TaskController.listTaskByStatus);
 
 module.exports = router;

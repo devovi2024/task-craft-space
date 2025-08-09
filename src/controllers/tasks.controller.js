@@ -1,20 +1,20 @@
-const TaskModel = require("../models/tasks.model");
+const TasksModel = require("../models/tasks.model");
 
-// Create Task
+
+
 exports.createTask = async (req, res) => {
   try {
-    const reqBody = { ...req.body, email: req.headers["email"] };
-    const task = await TaskModel.create(reqBody);
+    const reqBody = { ...req.body, email: req.user.email };
+    const task = await TasksModel.create(reqBody);
     res.status(201).json({ status: "success", data: task });
   } catch (err) {
     res.status(400).json({ status: "fail", error: err.message });
   }
 };
 
-// Delete Task
 exports.deleteTask = async (req, res) => {
   try {
-    const result = await TaskModel.deleteOne({ _id: req.params.id });
+    const result = await TasksModel.deleteOne({ _id: req.params.id });
     if (result.deletedCount === 0) {
       return res.status(404).json({ status: "fail", message: "Task not found" });
     }
@@ -24,18 +24,48 @@ exports.deleteTask = async (req, res) => {
   }
 };
 
-// Update Task Status
 exports.updateStatus = async (req, res) => {
   try {
-    const { id, status } = req.params;
-    const result = await TaskModel.updateOne(
-      { _id: id },
-      { $set: { status } }
-    );
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({ status: "fail", message: "Invalid status value" });
+    }
+
+    const result = await TasksModel.updateOne({ _id: id }, { $set: { status } });
+
     if (result.matchedCount === 0) {
       return res.status(404).json({ status: "fail", message: "Task not found" });
     }
+
     res.status(200).json({ status: "success", message: "Status updated" });
+  } catch (err) {
+    res.status(400).json({ status: "fail", error: err.message });
+  }
+};
+
+exports.listTaskByStatus = async (req, res) => {
+  try {
+    const status = req.params.status;
+    const email = req.user.email;
+
+    const tasks = await TasksModel.aggregate([
+      { $match: { status: status, email: email } },
+      {
+        $project: {
+          _id: 1,
+          title: 1,
+          description: 1,
+          status: 1,
+          createDate: {
+            $dateToString: { date: "$createDate", format: "%d-%m-%Y" }
+          }
+        }
+      }
+    ]);
+
+    res.status(200).json({ status: "success", data: tasks });
   } catch (err) {
     res.status(400).json({ status: "fail", error: err.message });
   }

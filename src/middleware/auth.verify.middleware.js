@@ -8,7 +8,7 @@ module.exports = (req, res, next) => {
   jwt.verify(token, JWT_SECRET, (err, decoded) => {
     if (err) return res.status(401).json({ status: "unauthorized" });
 
-    req.headers.email = decoded.data;
+    req.user = { email: decoded.data };
     next();
   });
 };
