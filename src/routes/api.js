@@ -1,14 +1,18 @@
 const express = require("express");
-const UsersController = require("../controllers/users.controller");
-const AuthMiddleware = require("../middleware/auth.verify.middleware");
-
 const router = express.Router();
 
-// Public routes: Registration and Login
+const UsersController = require("../controllers/users.controller");
+const TaskController = require("../controllers/tasks.controller");
+const AuthMiddleware = require("../middleware/auth.verify.middleware");
+
+// User Routes
 router.post("/registration", UsersController.registration);
 router.post("/login", UsersController.login);
-
-// Protected route: Profile update requires token
 router.post("/profile-update", AuthMiddleware, UsersController.profileUpdate);
+
+// Task Routes
+router.post("/tasks", AuthMiddleware, TaskController.createTask);
+router.delete("/tasks/:id", AuthMiddleware, TaskController.deleteTask);
+router.patch("/tasks/:id/:status", AuthMiddleware, TaskController.updateStatus);
 
 module.exports = router;
